@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Digit Recognizer</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <h1>Digit Recognizer</h1>
+    <div>
+        <img src="{{ url_for('static', filename='image.jpg') }}" width="200" height="200" />
+    </div>
+    <div>
+        <canvas id="canvas" width="200" height="200" style="border:1px solid #000000;"></canvas>
+    </div>
+    <div>
+        <button onclick="predict()">Predict</button>
+        <button onclick="clearCanvas()">Clear</button>
+    </div>
+    <br />
+    <h2>Prediction Result: <span id="result"></span></h2>
+
+    <script type="text/javascript">
+        var canvas = document.getElementById("canvas");
+        var context = canvas.getContext("2d");
+        var drawing = false;
+        
+        canvas.addEventListener("mousedown", function(event) {
+            drawing = true;
+            var x = event.offsetX;
+            var y = event.offsetY;
+            context.beginPath();
+            context.fillStyle = "black";
+            context.arc(x, y, 10, 0, 2 * Math.PI);
+            context.fill();
+        });
+        
+        canvas.addEventListener("mousemove", function(event) {
+            if (drawing) {
+                var x = event.offsetX;
+                var y = event.offsetY;
+                context.beginPath();
+                context.fillStyle = "black";
+                context.arc(x, y, 10, 0, 2 * Math.PI);
+                context.fill();
+            }
+        });
+        
+        canvas.addEventListener("mouseup", function(event) {
+            drawing = false;
+        });
+
+        function predict() {
+            var canvasData = canvas.toDataURL("image/png");
+            console.log(canvasData);  // log canvas data to console
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/predict", true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({data: canvasData}));
+        
+            xhr.onreadystatechange = function() {
+                if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                    var result = JSON.parse(xhr.responseText);
+                    document.getElementById("result").innerHTML = result.digit;
+                }
+            }
+        }
+        
+        function clearCanvas() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById("result").innerHTML = "";
+        }
+    </script>
+</body>
+</html>
